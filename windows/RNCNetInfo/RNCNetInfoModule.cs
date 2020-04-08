@@ -2,19 +2,18 @@
 // Portions derived from React Native:
 // Copyright (c) 2015-present, Facebook, Inc.
 // Licensed under the MIT License.
-
-using Newtonsoft.Json.Linq;
-using ReactNative.Bridge;
-using ReactNative.Modules.Core;
 using Windows.Networking.Connectivity;
+using Microsoft.ReactNative.Managed;
+using System.Collections.Generic;
 
-namespace ReactNativeCommunity.NetInfo
+namespace RNCNetInfo
 {
     /// <summary>
     /// Module that monitors and provides information about the connectivity
     /// state of the device.
     /// </summary>
-    public class RNCNetInfoModule : ReactContextNativeModuleBase, ILifecycleEventListener
+    [ReactModule]
+    internal sealed class RNCNetInfo
     {
         // These constants need to match the strings defined in types.ts
         private const string CONNECTION_TYPE_CELLULAR = "cellular";
@@ -36,8 +35,8 @@ namespace ReactNativeCommunity.NetInfo
         /// Instantiates the <see cref="RNCNetInfoModule"/>.
         /// </summary>
         /// <param name="reactContext">The React context.</param>
-        public RNCNetInfoModule(ReactContext reactContext)
-            : this(new DefaultNetworkInformation(), reactContext)
+        public RNCNetInfo()
+            : this(new DefaultNetworkInformation())
         {
         }
 
@@ -46,30 +45,20 @@ namespace ReactNativeCommunity.NetInfo
         /// </summary>
         /// <param name="networkInfo">The network information.</param>
         /// <param name="reactContext">The React context.</param>
-        public RNCNetInfoModule(INetworkInformation networkInfo, ReactContext reactContext)
-            : base(reactContext)
+        public RNCNetInfo(INetworkInformation networkInfo)
+            : base()
         {
             _networkInfo = networkInfo;
         }
 
-        /// <summary>
-        /// Gets the name of the native module.
-        /// </summary>
-        public override string Name
-        {
-            get
-            {
-                return "RNCNetInfo";
-            }
-        }
+
 
         /// <summary>
         /// Gets the current connectivity state of the app.
         /// </summary>
-        /// <param name="string">The interface from which to obtain the information (not currently supported)</param>
         /// <param name="promise">A promise to resolve the request.</param>
         [ReactMethod]
-        public void getCurrentState(String requestedInterface, IPromise promise)
+        public void getCurrentState(ReactPromise<JSValue> promise)
         {
             promise.Resolve(CreateConnectivityEventMap());
         }
@@ -99,44 +88,36 @@ namespace ReactNativeCommunity.NetInfo
             _networkInfo.Stop();
         }
 
-        /// <summary>
-        /// Called when the React instance is initialized.
-        /// </summary>
-        public override void Initialize()
+        private JSValue CreateConnectivityEventMap()
         {
-            Context.AddLifecycleEventListener(this);
-        }
-
-        private JObject CreateConnectivityEventMap()
-        {
-            var eventMap = new JObject();
+            var eventMap = new Dictionary<string, JSValue>();
 
             // Add the connection type information
             var type = GetConnectivityType();
-            eventMap.Add("type", type);
+            eventMap.Add("type", new JSValue(type));
 
             // Add the connection state information
             var isConnected = GetIsConnected();
-            eventMap.Add("isConnected", isConnected);
+            eventMap.Add("isConnected", new JSValue(isConnected));
 
             // Add the details, if there are any
-            JObject details = null;
+            Dictionary<string, JSValue> details = null;
             if (isConnected)
             {
-                details = new JObject();
+                details = new Dictionary<string, JSValue>();
 
                 var isConnectionExpensive = GetIsConnectionExpensive();
-                details.Add("isConnectionExpensive", isConnectionExpensive);
+                details.Add("isConnectionExpensive", new JSValue(isConnectionExpensive));
 
                 if (type == CONNECTION_TYPE_CELLULAR)
                 {
                     var cellularGeneration = GetCellularGeneration();
-                    details.Add("cellularGeneration", cellularGeneration);
+                    details.Add("cellularGeneration", new JSValue(cellularGeneration));
                 }
             }
-            eventMap.Add("details", details);
+            eventMap.Add("details", new JSValue(details));
 
-            return eventMap;
+            return new JSValue(eventMap);
         }
 
         private string GetConnectivityType()
@@ -209,11 +190,13 @@ namespace ReactNativeCommunity.NetInfo
             return connectionCost == NetworkCostType.Fixed || connectionCost == NetworkCostType.Variable;
         }
 
+        [ReactEvent]
+        public ReactEvent<object> NetworkStatusDidChange { get; set; }
+
         private void OnStatusChanged(object ignored)
         {
             var connectivity = CreateConnectivityEventMap();
-            Context.GetJavaScriptModule<RCTDeviceEventEmitter>()
-                .emit("netInfo.networkStatusDidChange", CreateConnectivityEventMap());
+            NetworkStatusDidChange(CreateConnectivityEventMap());
         }
     }
 }

@@ -3,7 +3,7 @@
 
 using Windows.Networking.Connectivity;
 
-namespace ReactNativeCommunity.NetInfo
+namespace RNCNetInfo
 {
     public enum NetworkConnectionType
     {

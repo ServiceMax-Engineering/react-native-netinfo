@@ -3,7 +3,7 @@
 
 using Windows.Networking.Connectivity;
 
-namespace ReactNativeCommunity.NetInfo
+namespace RNCNetInfo
 {
     /// <summary>
     /// An interface for network information status and updates.

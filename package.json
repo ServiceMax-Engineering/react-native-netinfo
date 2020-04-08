@@ -43,8 +43,7 @@
     "build:e2e:macos": "scripts/run_macos_e2e.sh 'build'",
     "test:e2e:macos": "scripts/run_macos_e2e.sh 'test'",
     "ci:publish": "yarn semantic-release",
-    "semantic-release": "semantic-release",
-    "prepare": "bob build"
+    "semantic-release": "semantic-release"
   },
   "keywords": [
     "react-native",
