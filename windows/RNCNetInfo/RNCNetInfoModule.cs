@@ -5,6 +5,7 @@
 using Windows.Networking.Connectivity;
 using Microsoft.ReactNative.Managed;
 using System.Collections.Generic;
+using System;
 
 namespace RNCNetInfo
 {
@@ -191,7 +192,7 @@ namespace RNCNetInfo
         }
 
         [ReactEvent]
-        public ReactEvent<object> NetworkStatusDidChange { get; set; }
+        public Action<object> NetworkStatusDidChange { get; set; }
 
         private void OnStatusChanged(object ignored)
         {
