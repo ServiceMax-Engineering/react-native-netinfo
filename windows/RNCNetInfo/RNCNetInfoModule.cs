@@ -50,6 +50,7 @@ namespace RNCNetInfo
             : base()
         {
             _networkInfo = networkInfo;
+            OnResume();
         }
 
 
@@ -197,7 +198,7 @@ namespace RNCNetInfo
         private void OnStatusChanged(object ignored)
         {
             var connectivity = CreateConnectivityEventMap();
-            NetworkStatusDidChange(CreateConnectivityEventMap());
+            NetworkStatusDidChange(connectivity);
         }
     }
 }
